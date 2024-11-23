@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page - View User Submissions</title>
+    <style>
+        body {
+            background-color: #1B262C;
+            color: #BBE1FA;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 90%;
+        }
+
+        table, th, td {
+            border: 1px solid #BBE1FA;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #0F4C75;
+        }
+
+        a {
+            color: #3282B8;
+            text-decoration: none;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #3282B8;
+        }
+
+        .search-bar input[type="submit"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3282B8;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .search-bar input[type="submit"]:hover {
+            background-color: #0F4C75;
+        }
+
+        .delete-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: red;
+            color: white;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background-color: darkred;
+        }
+    </style>
+    <script>
+        async function fetchSubmissions(searchName = '') {
+            // Replace this URL with your backend API endpoint
+            const apiEndpoint = `https://example.com/api/submissions?search_name=${encodeURIComponent(searchName)}`;
+            try {
+                const response = await fetch(apiEndpoint);
+                const submissions = await response.json();
+                displaySubmissions(submissions);
+            } catch (error) {
+                console.error('Error fetching submissions:', error);
+            }
+        }
+
+        function displaySubmissions(submissions) {
+            const tableBody = document.getElementById('submissionsBody');
+            tableBody.innerHTML = '';
+
+            if (submissions.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5">No submissions found.</td></tr>`;
+                return;
+            }
+
+            submissions.forEach(submission => {
+                const row = document.createElement('tr');
+
+                // ID
+                const idCell = document.createElement('td');
+                idCell.textContent = submission.id;
+                row.appendChild(idCell);
+
+                // Name
+                const nameCell = document.createElement('td');
+                nameCell.textContent = submission.name || 'Anonymous';
+                row.appendChild(nameCell);
+
+                // Message
+                const messageCell = document.createElement('td');
+                messageCell.textContent = submission.text;
+                row.appendChild(messageCell);
+
+                // Files
+                const filesCell = document.createElement('td');
+                if (submission.file_paths && submission.file_paths.length > 0) {
+                    const fileList = document.createElement('ul');
+                    submission.file_paths.forEach(filePath => {
+                        const fileItem = document.createElement('li');
+                        const fileLink = document.createElement('a');
+                        fileLink.href = filePath;
+                        fileLink.target = '_blank';
+                        fileLink.textContent = filePath.split('/').pop();
+                        fileItem.appendChild(fileLink);
+                        fileList.appendChild(fileItem);
+                    });
+                    filesCell.appendChild(fileList);
+                } else {
+                    filesCell.textContent = 'No files';
+                }
+                row.appendChild(filesCell);
+
+                // Action
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.className = 'delete-button';
+                deleteButton.onclick = () => deleteSubmission(submission.id);
+                actionCell.appendChild(deleteButton);
+                row.appendChild(actionCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function deleteSubmission(id) {
+            // Replace this URL with your backend API endpoint for deletion
+            const apiEndpoint = `https://example.com/api/delete_submission`;
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                if (response.ok) {
+                    alert('Submission deleted successfully.');
+                    fetchSubmissions();
+                } else {
+                    alert('Error deleting submission.');
+                }
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+            }
+        }
+
+        function handleSearch(event) {
+            event.preventDefault();
+            const searchName = document.getElementById('searchName').value;
+            fetchSubmissions(searchName);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSubmissions();
+        });
+    </script>
+</head>
+<body>
+    <h1>Admin Page - View Submissions</h1>
+    <form class="search-bar" onsubmit="handleSearch(event)">
+        <input type="text" id="searchName" placeholder="Search by name">
+        <input type="submit" value="Search">
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Message</th>
+                <th>Files</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="submissionsBody">
+            <!-- Submissions will be dynamically inserted here -->
+        </tbody>
+    </table>
+</body>
+</html>
