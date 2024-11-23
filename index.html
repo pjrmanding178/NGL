@@ -110,6 +110,7 @@
     <script>
         async function handleFormSubmission(event) {
             event.preventDefault();
+            
             const name = document.getElementById('name').value || 'Anonymous';
             const text = document.getElementById('text').value;
             const files = document.getElementById('files').files;
@@ -122,21 +123,26 @@
                 formData.append('files[]', files[i]);
             }
 
-            // Send form data to API or show a success message (example)
+            console.log('Sending the following data:', { name, text, files });
+
             try {
-                const response = await fetch('https://example.com/api/submit', { // Replace with your API endpoint
+                const response = await fetch('https://your-backend-url.com/api/submit', { // Replace with your actual API endpoint
                     method: 'POST',
                     body: formData,
                 });
 
                 if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('Response:', responseData);
                     showMessage('Message submitted successfully!', 'success');
                 } else {
-                    showMessage('Error submitting the message. Try again later.', 'error');
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    showMessage(`Error: ${errorText}`, 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Error submitting the message. Try again later.', 'error');
+                console.error('Fetch Error:', error);
+                showMessage('An unexpected error occurred. Please try again.', 'error');
             }
         }
 
